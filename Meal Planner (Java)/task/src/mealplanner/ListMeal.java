@@ -90,11 +90,185 @@ public class ListMeal {
         }
     }
 
+    public void showLunchMeals() {
+        try {
+            Connection conn = getConnection();
+            //Selecting from meals database
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS");
+            ResultSet rs = statement.executeQuery();
+
+            //Selecting from ingredients database
+            PreparedStatement statementIngredient = conn.prepareStatement("SELECT * FROM INGREDIENTS");
+            ResultSet rsIngredient = statementIngredient.executeQuery();
+
+            boolean emptyTable = true;
+            while (rs.next() && rsIngredient.next()) {
+                StringBuilder sb = new StringBuilder("\n");
+                int meal_ID = rs.getInt("meal_id");
+                int ingredient_ID = rsIngredient.getInt("meal_id");
+                String mealType = rs.getString("category");
+                String mealName = rs.getString("meal");
+                String ingredients = rsIngredient.getString("ingredient");
+                String[] ingredientsArray = ingredients.split(", ");
+
+                if (mealType.equals("lunch") && meal_ID == ingredient_ID) {
+                    if (emptyTable) {
+                        System.out.println("Category: lunch");
+                    }
+
+                    //Formatting the ingredients
+                    for (String ingredient : ingredientsArray) {
+                        sb.append(ingredient).append("\n");
+                    }
+
+                    System.out.println("Name: " + mealName +
+                            "\nIngredients: " + sb.toString());
+
+                    emptyTable = false;
+                }
+                //Resetting the StringBuilder
+                sb.setLength(0);
+
+            }
+
+            if (emptyTable) {
+                System.out.println("No meals found.");
+            }
+
+            statementIngredient.close();
+            statement.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Error" + e.getMessage());
+        }
+    }
+
+    public void showBreakfastMeals() {
+        try {
+            Connection conn = getConnection();
+            //Selecting from meals database
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS");
+            ResultSet rs = statement.executeQuery();
+
+            //Selecting from ingredients database
+            PreparedStatement statementIngredient = conn.prepareStatement("SELECT * FROM INGREDIENTS");
+            ResultSet rsIngredient = statementIngredient.executeQuery();
+
+            boolean emptyTable = true;
+            while (rs.next() && rsIngredient.next()) {
+                StringBuilder sb = new StringBuilder("\n");
+                int meal_ID = rs.getInt("meal_id");
+                int ingredient_ID = rsIngredient.getInt("meal_id");
+                String mealType = rs.getString("category");
+                String mealName = rs.getString("meal");
+                String ingredients = rsIngredient.getString("ingredient");
+                String[] ingredientsArray = ingredients.split(", ");
+
+                if (mealType.equals("breakfast") && meal_ID == ingredient_ID) {
+                    if (emptyTable) {
+                        System.out.println("Category: breakfast");
+                    }
+
+                    //Formatting the ingredients
+                    for (String ingredient : ingredientsArray) {
+                        sb.append(ingredient).append("\n");
+                    }
+
+                    System.out.println("Name: " + mealName +
+                            "\nIngredients: " + sb.toString());
+
+                    emptyTable = false;
+                }
+                //Resetting the StringBuilder
+                sb.setLength(0);
+
+            }
+
+            if (emptyTable) {
+                System.out.println("No meals found.");
+            }
+
+            statementIngredient.close();
+            statement.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Error" + e.getMessage());
+        }
+    }
+
+    public void showDinnerMeals() {
+        try {
+            Connection conn = getConnection();
+            //Selecting from meals database
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS");
+            ResultSet rs = statement.executeQuery();
+
+            //Selecting from ingredients database
+            PreparedStatement statementIngredient = conn.prepareStatement("SELECT * FROM INGREDIENTS");
+            ResultSet rsIngredient = statementIngredient.executeQuery();
+
+            boolean emptyTable = true;
+            while (rs.next() && rsIngredient.next()) {
+                StringBuilder sb = new StringBuilder("\n");
+                int meal_ID = rs.getInt("meal_id");
+                int ingredient_ID = rsIngredient.getInt("meal_id");
+                String mealType = rs.getString("category");
+                String mealName = rs.getString("meal");
+                String ingredients = rsIngredient.getString("ingredient");
+                String[] ingredientsArray = ingredients.split(", ");
+
+                if (mealType.equals("dinner") && meal_ID == ingredient_ID) {
+                    if (emptyTable) {
+                        System.out.println("Category: dinner");
+                    }
+
+                    //Formatting the ingredients
+                    for (String ingredient : ingredientsArray) {
+                        sb.append(ingredient).append("\n");
+                    }
+
+                    System.out.println("Name: " + mealName +
+                            "\nIngredients: " + sb.toString());
+
+                    emptyTable = false;
+                }
+                //Resetting the StringBuilder
+                sb.setLength(0);
+
+            }
+
+            if (emptyTable) {
+                System.out.println("No meals found.");
+            }
+
+            statementIngredient.close();
+            statement.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Error" + e.getMessage());
+        }
+    }
+
     public int size() {
         return this.listMeal.size();
     }
 
     public boolean checkTypeMeal(String typeMeal) {
+        typeMeal = typeMeal.toLowerCase().trim();
+
+        switch (typeMeal) {
+            case "breakfast", "dinner", "lunch" -> {
+                return true;
+            }
+            default -> {
+                System.out.println("Wrong meal category! Choose from: breakfast, lunch, dinner.");
+                return false;
+            }
+        }
+
+    }
+
+    public boolean checkTypeMealToShow(String typeMeal) {
         typeMeal = typeMeal.toLowerCase().trim();
 
         switch (typeMeal) {

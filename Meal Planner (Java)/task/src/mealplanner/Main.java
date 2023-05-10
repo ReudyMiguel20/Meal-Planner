@@ -20,12 +20,25 @@ public class Main {
                     listMeal.addMeal(scanner);
                 }
                 case "show" -> {
-//                    if (listMeal.size() <= 0) {
-//                        System.out.println("No meals saved. Add a meal first.");
-//                    } else {
-//                        listMeal.printMeals();
-//                    }
-                    listMeal.showMeals();
+                    System.out.println("Which category do you want to print (breakfast, lunch, dinner)?");
+                    userInput = scanner.nextLine();
+
+                    while (!listMeal.checkTypeMealToShow(userInput)) {
+                        userInput = scanner.nextLine();
+                    }
+
+                    switch (userInput) {
+                        case "breakfast" -> {
+                            listMeal.showBreakfastMeals();
+                        }
+                        case "lunch" -> {
+                            listMeal.showLunchMeals();
+                        }
+                        case "dinner" -> {
+                            listMeal.showDinnerMeals();
+                        }
+                    }
+
                 }
                 case "exit" -> {
                     System.out.println("Bye!");
@@ -41,9 +54,9 @@ public class Main {
     }
 
     public static void accessDatabase() throws SQLException {
-        final String DB_URL = "jdbc:postgresql:meals_db";
-        final String USER = "postgres";
-        final String PASS = "1111";
+        String DB_URL = "jdbc:postgresql://localhost/meals_db";
+        String USER = "postgres";
+        String PASS = "1111";
 
         Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
         connection.setAutoCommit(true);
