@@ -1,10 +1,14 @@
 package mealplanner;
 
 import javax.xml.transform.Result;
+import java.io.File;
+import java.io.IOException;
+import java.time.Period;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.*;
+import java.io.FileWriter;
 
 public class ListMeal {
     private Map<String, Meal> listMeal;
@@ -321,9 +325,9 @@ public class ListMeal {
         ResultSet rs = statement.executeQuery("SELECT * FROM PLAN");
 
         if (rs.next()) {
-            return true;
-        } else {
             return false;
+        } else {
+            return true;
         }
 
     }
@@ -557,6 +561,89 @@ public class ListMeal {
                 System.out.println(meal);
             }
         }
+    }
+
+    public ArrayList<String> ingredientList() throws SQLException {
+        ArrayList<String> ingredientsList = new ArrayList<>();
+
+        Connection conn = getConnection();
+
+        PreparedStatement statementMealIDIngredients = conn.prepareStatement("SELECT * FROM INGREDIENTS");
+        PreparedStatement statementMealIDPlan = conn.prepareStatement("SELECT * FROM PLAN");
+
+
+        ResultSet rsPlan = statementMealIDPlan.executeQuery();
+        ResultSet rsIngredients = statementMealIDIngredients.executeQuery();
+        rsPlan.next();
+
+        //There's 21 meals on the plan, so that's why 21 a constant variable
+        int i = 1;
+        for (int j = i; i <= 21;) {
+            rsIngredients.next();
+            int meal_ID_Ingredient = rsIngredients.getInt("meal_id");
+            String ingredients = rsIngredients.getString("ingredient");
+            int meal_ID_Plan = rsPlan.getInt("meal_id");
+
+            if (meal_ID_Ingredient == meal_ID_Plan) {
+                rsIngredients = statementMealIDIngredients.executeQuery();
+                String[] ingredientsSplit = ingredients.split(",");
+                //Splitting the ingredients to add it to the List
+                for (String ingredient : ingredientsSplit) {
+                    ingredientsList.add(ingredient);
+                }
+                rsPlan.next();
+                i++;
+            }
+        }
+        return ingredientsList;
+    }
+
+    public String ingredientsToString() throws SQLException {
+        StringBuilder sb = new StringBuilder();
+        ArrayList<String> ingredientsTotal = new ArrayList<>();
+        ArrayList<String> ingredientList = ingredientList();
+
+        for (int i = 0; i < ingredientList.size(); i++) {
+            int counter = 1;
+            for (int j = i + 1; j <= ingredientList.size(); j++) {
+                if (ingredientsTotal.toString().contains(ingredientList.get(i))) {
+                    break;
+                }
+                else if (j == ingredientList.size()) {
+                    continue;
+                }
+                else if (ingredientList.get(i).equals(ingredientList.get(j))) {
+                    counter++;
+                }
+            }
+            if (!ingredientsTotal.toString().contains(ingredientList.get(i))) {
+                if (counter == 1) {
+                    ingredientsTotal.add(ingredientList.get(i));
+                } else {
+                    String counterToString = String.valueOf(counter);
+                    ingredientsTotal.add(ingredientList.get(i) + " x" + counterToString);
+                }
+            }
+        }
+
+        for (String x : ingredientsTotal) {
+            sb.append(x).append("\n");
+        }
+
+        return sb.toString();
+
+    }
+
+    public void saveFile(String fileName) throws IOException {
+        try {
+            FileWriter writer = new FileWriter(fileName);
+            writer.write(ingredientsToString());
+            writer.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

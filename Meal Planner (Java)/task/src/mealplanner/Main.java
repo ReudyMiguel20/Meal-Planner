@@ -1,10 +1,11 @@
 package mealplanner;
 
+import java.io.IOException;
 import java.util.Scanner;
 import java.sql.*;
 
 public class Main {
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+    public static void main(String[] args) throws SQLException, ClassNotFoundException, IOException {
         //Initializing Objects and Variables
         Scanner scanner = new Scanner(System.in);
         ListMeal listMeal = new ListMeal();
@@ -41,8 +42,18 @@ public class Main {
 
                 }
                 case "plan" -> {
-                    if (!listMeal.isPlanEmpty()) {
+                    if (listMeal.isPlanEmpty()) {
                         listMeal.planWeekMealsFromScratch(scanner);
+                    }
+                }
+                case "save" -> {
+                    if (listMeal.isPlanEmpty()) {
+                        System.out.println("Unable to save. Plan your meals first.");
+                    } else {
+                        System.out.println("Input a filename:");
+                        String fileName = scanner.nextLine();
+                        listMeal.saveFile(fileName);
+                        System.out.println("Saved!");
                     }
                 }
                 case "exit" -> {
@@ -53,9 +64,8 @@ public class Main {
         }
     }
 
-
     public static void askUser() {
-        System.out.println("What would you like to do (add, show, plan, exit)?");
+        System.out.println("What would you like to do (add, show, plan, save, exit)?");
     }
 
     public static void accessDatabase() throws SQLException {
