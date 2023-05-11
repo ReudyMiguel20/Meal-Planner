@@ -40,6 +40,11 @@ public class Main {
                     }
 
                 }
+                case "plan" -> {
+                    if (!listMeal.isPlanEmpty()) {
+                        listMeal.planWeekMealsFromScratch(scanner);
+                    }
+                }
                 case "exit" -> {
                     System.out.println("Bye!");
                     exit = true;
@@ -50,7 +55,7 @@ public class Main {
 
 
     public static void askUser() {
-        System.out.println("What would you like to do (add, show, exit)?");
+        System.out.println("What would you like to do (add, show, plan, exit)?");
     }
 
     public static void accessDatabase() throws SQLException {
@@ -67,12 +72,18 @@ public class Main {
                 CREATE TABLE IF NOT EXISTS meals(
                 category varchar(1000),
                 meal varchar(1000),
-                meal_id integer);""");
+                meal_id integer PRIMARY KEY);""");
 
         statement.execute("""
                 CREATE TABLE IF NOT EXISTS ingredients(
                 ingredient varchar(1000),
                 ingredient_id integer,
+                meal_id integer PRIMARY KEY);""");
+
+        statement.execute("""
+                CREATE TABLE IF NOT EXISTS plan(
+                meal varchar(1000),
+                category varchar(1000),
                 meal_id integer);""");
     }
 }

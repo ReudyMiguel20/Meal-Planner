@@ -1,5 +1,6 @@
 package mealplanner;
 
+import javax.xml.transform.Result;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,51 +45,51 @@ public class ListMeal {
         this.listMeal.forEach((key, meal) -> System.out.println(meal.toString()));
     }
 
-    public void showMeals() {
-        try {
-            Connection conn = getConnection();
-
-            //Selecting from meals database
-            PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS");
-            ResultSet rs = statement.executeQuery();
-
-            //Selecting from ingredients database
-            PreparedStatement statementIngredient = conn.prepareStatement("SELECT * FROM INGREDIENTS");
-            ResultSet rsIngredient = statementIngredient.executeQuery();
-
-            boolean emptyTable = true;
-            while (rs.next() && rsIngredient.next()) {
-                StringBuilder sb = new StringBuilder("\n");
-                String typeMeal = rs.getString("category");
-                String mealName = rs.getString("meal");
-                String ingredients = rsIngredient.getString("ingredient");
-                String[] ingredientsArray = ingredients.split(", ");
-
-                //Formatting the ingredients
-                for (String ingredient : ingredientsArray) {
-                    sb.append(ingredient).append("\n");
-                }
-
-                System.out.println("\nCategory: " + typeMeal +
-                        "\nName: " + mealName +
-                        "\nIngredients: " + sb.toString());
-
-                //Resetting the StringBuilder
-                sb.setLength(0);
-                emptyTable = false;
-            }
-
-            if (emptyTable) {
-                System.out.println("No meals saved. Add a meal first.");
-            }
-
-            statementIngredient.close();
-            statement.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println("Error" + e.getMessage());
-        }
-    }
+//    public void showMeals() {
+//        try {
+//            Connection conn = getConnection();
+//
+//            //Selecting from meals database
+//            PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS");
+//            ResultSet rs = statement.executeQuery();
+//
+//            //Selecting from ingredients database
+//            PreparedStatement statementIngredient = conn.prepareStatement("SELECT * FROM INGREDIENTS");
+//            ResultSet rsIngredient = statementIngredient.executeQuery();
+//
+//            boolean emptyTable = true;
+//            while (rs.next() && rsIngredient.next()) {
+//                StringBuilder sb = new StringBuilder("\n");
+//                String typeMeal = rs.getString("category");
+//                String mealName = rs.getString("meal");
+//                String ingredients = rsIngredient.getString("ingredient");
+//                String[] ingredientsArray = ingredients.split(", ");
+//
+//                //Formatting the ingredients
+//                for (String ingredient : ingredientsArray) {
+//                    sb.append(ingredient).append("\n");
+//                }
+//
+//                System.out.println("\nCategory: " + typeMeal +
+//                        "\nName: " + mealName +
+//                        "\nIngredients: " + sb.toString());
+//
+//                //Resetting the StringBuilder
+//                sb.setLength(0);
+//                emptyTable = false;
+//            }
+//
+//            if (emptyTable) {
+//                System.out.println("No meals saved. Add a meal first.");
+//            }
+//
+//            statementIngredient.close();
+//            statement.close();
+//            conn.close();
+//        } catch (SQLException e) {
+//            System.out.println("Error" + e.getMessage());
+//        }
+//    }
 
     public void showLunchMeals() {
         try {
@@ -313,6 +314,20 @@ public class ListMeal {
         return DriverManager.getConnection(url, username, password);
     }
 
+    public boolean isPlanEmpty() throws SQLException {
+        Connection conn = getConnection();
+        Statement statement = conn.createStatement();
+
+        ResultSet rs = statement.executeQuery("SELECT * FROM PLAN");
+
+        if (rs.next()) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
     public void saveMealToDB(String mealType, String mealName, String ingredients) throws SQLException {
         //Get the connection to the PostgreSQL database
         String url = "jdbc:postgresql:meals_db";
@@ -327,6 +342,7 @@ public class ListMeal {
 
         while (!added) {
             try {
+                //maybe need to change this
                 ingredient_id = meal_id;
                 String sqlMeals = "INSERT INTO MEALS (meal_id, category, meal) VALUES (?, ?, ?)";
                 PreparedStatement statement = conn.prepareStatement(sqlMeals);
@@ -356,6 +372,189 @@ public class ListMeal {
                 added = true;
             } catch (Exception e) {
                 meal_id++;
+            }
+        }
+    }
+
+    public void planWeekMealsFromScratch(Scanner scanner) throws SQLException {
+        //Initializing Arraylist with days of the week
+        ArrayList<String> daysOfTheWeek = new ArrayList<>(Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"));
+
+        //For loop for adding meals to each day
+        for (String day : daysOfTheWeek) {
+            System.out.println(day);
+            //Adding breakfast
+            listBreakfastMeals();
+            System.out.println("Choose the breakfast for " + day + " from the list above:");
+            String breakfast = scanner.nextLine();
+            //This checks whether the item its on the meal list or not
+            while (getMealID(breakfast) == -1) {
+                System.out.println("This meal doesn’t exist. Choose a meal from the list above.");
+                breakfast = scanner.nextLine();
+            }
+            insertBreakfast(getMealID(breakfast), breakfast);
+
+            //Adding Lunch
+            listLunchMeals();
+            System.out.println("Choose the lunch for " + day + " from the list above:");
+            String lunch = scanner.nextLine();
+            while (getMealID(lunch) == -1) {
+                System.out.println("This meal doesn’t exist. Choose a meal from the list above.");
+                lunch = scanner.nextLine();
+            }
+            insertLunch(getMealID(lunch), lunch);
+
+            //Adding Dinner
+            listDinnerMeals();
+            System.out.println("Choose the dinner for " + day + " from the list above:");
+            String dinner = scanner.nextLine();
+            //This checks whether the item its on the meal list or not
+            while (getMealID(dinner) == -1) {
+                System.out.println("This meal doesn’t exist. Choose a meal from the list above.");
+                dinner = scanner.nextLine();
+            }
+            insertDinner(getMealID(dinner), dinner);
+
+            System.out.println("Yeah! We planned the meals for " + day + ".\n");
+        }
+        printMealsForTheWeek();
+    }
+
+    public void printMealsForTheWeek() throws SQLException {
+        //Initializing Arraylist with days of the week
+        ArrayList<String> daysOfTheWeek = new ArrayList<>(Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"));
+
+        //Creating connection with database
+        Connection conn = getConnection();
+
+        //Statements for each category meal
+        PreparedStatement breakfastStatement = conn.prepareStatement("SELECT * FROM PLAN WHERE CATEGORY = 'breakfast'");
+        PreparedStatement lunchStatement = conn.prepareStatement("SELECT * FROM PLAN WHERE CATEGORY = 'lunch'");
+        PreparedStatement dinnerStatement = conn.prepareStatement("SELECT * FROM PLAN WHERE CATEGORY = 'dinner'");
+
+        //ResultSets for each category meal
+        ResultSet rsBreakfast = breakfastStatement.executeQuery();
+        ResultSet rsLunch = lunchStatement.executeQuery();
+        ResultSet rsDinner = dinnerStatement.executeQuery();
+
+        //Printing meals by day
+        for (String day : daysOfTheWeek) {
+            System.out.println(day);
+            rsBreakfast.next();
+            rsLunch.next();
+            rsDinner.next();
+            String breakfast = rsBreakfast.getString("meal");
+            String lunch = rsLunch.getString("meal");
+            String dinner = rsDinner.getString("meal");
+            System.out.println("Breakfast: " + breakfast);
+            System.out.println("Lunch: " + lunch);
+            System.out.println("Dinner: " + dinner + "\n");
+        }
+
+
+    }
+
+    public int getMealID(String userMealInput) throws SQLException {
+        Connection conn = getConnection();
+        PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS");
+
+        ResultSet rs = statement.executeQuery();
+
+        while (rs.next()) {
+            int meal_id = rs.getInt("meal_id");
+            String mealName = rs.getString("meal");
+
+            if (mealName.equals(userMealInput)) {
+                return meal_id;
+            }
+        }
+        return -1;
+    }
+
+    public void insertBreakfast(int meal_id, String mealName) throws SQLException {
+        Connection conn = getConnection();
+
+        String sqlBreakfast = "INSERT INTO PLAN (meal_id, category, meal) VALUES (?, ?, ?)";
+        PreparedStatement statement = conn.prepareStatement(sqlBreakfast);
+
+        statement.setInt(1, meal_id);
+        statement.setString(2, "breakfast");
+        statement.setString(3, mealName);
+
+        statement.executeUpdate();
+        conn.close();
+    }
+
+    public void insertLunch(int meal_id, String mealName) throws SQLException {
+        Connection conn = getConnection();
+
+        String sqlLunch = "INSERT INTO PLAN (meal_id, category, meal) VALUES (?, ?, ?)";
+        PreparedStatement statement = conn.prepareStatement(sqlLunch);
+
+        statement.setInt(1, meal_id);
+        statement.setString(2, "lunch");
+        statement.setString(3, mealName);
+
+        statement.executeUpdate();
+        conn.close();
+    }
+
+    public void insertDinner(int meal_id, String mealName) throws SQLException {
+        Connection conn = getConnection();
+
+        String sqlDinner = "INSERT INTO PLAN (meal_id, category, meal) VALUES (?, ?, ?)";
+        PreparedStatement statement = conn.prepareStatement(sqlDinner);
+
+        statement.setInt(1, meal_id);
+        statement.setString(2, "dinner");
+        statement.setString(3, mealName);
+
+        statement.executeUpdate();
+        conn.close();
+    }
+
+    public void listBreakfastMeals() throws SQLException {
+        Connection conn = getConnection();
+
+        PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS ORDER BY MEAL");
+        ResultSet rs = statement.executeQuery();
+
+        while (rs.next()) {
+            String category = rs.getString("category");
+            if (category.equals("breakfast")) {
+                String meal = rs.getString("meal");
+                System.out.println(meal);
+            }
+        }
+
+    }
+
+    public void listLunchMeals() throws SQLException {
+        Connection conn = getConnection();
+
+        PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS ORDER BY MEAL");
+        ResultSet rs = statement.executeQuery();
+
+        while (rs.next()) {
+            String category = rs.getString("category");
+            if (category.equals("lunch")) {
+                String meal = rs.getString("meal");
+                System.out.println(meal);
+            }
+        }
+    }
+
+    public void listDinnerMeals() throws SQLException {
+        Connection conn = getConnection();
+
+        PreparedStatement statement = conn.prepareStatement("SELECT * FROM MEALS ORDER BY MEAL");
+        ResultSet rs = statement.executeQuery();
+
+        while (rs.next()) {
+            String category = rs.getString("category");
+            if (category.equals("dinner")) {
+                String meal = rs.getString("meal");
+                System.out.println(meal);
             }
         }
     }
